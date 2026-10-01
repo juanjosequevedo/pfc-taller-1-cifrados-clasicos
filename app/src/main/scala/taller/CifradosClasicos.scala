@@ -56,7 +56,32 @@ class CifradosClasicos {
    * Cuenta las letras minúsculas del mensaje, de mayor a menor frecuencia y,
    * en empate, en orden alfabético. El recorrido es recursivo de cola.
    */
-  def frecuencias(m: Mensaje): Frecuencias = ???
+  def frecuencias(m: Mensaje): Frecuencias = {
+
+    def aux(RestoPalabra: String, acc: Frecuencias): Frecuencias = {
+
+      if(RestoPalabra.isEmpty) acc
+      else {
+
+        val letra = RestoPalabra.head
+
+        if (letra >= 'a'  && letra <= 'z') {
+
+          val existe = acc.exists(x => x._1 == letra)
+
+          if (existe)
+            aux(RestoPalabra.tail, acc)
+          else
+            aux(RestoPalabra.tail, (letra, 1) :: acc)
+        }
+        else {
+          aux(RestoPalabra.tail, acc)
+        }
+      }
+    }
+
+    aux(m, List()).sortBy(x => (-x._2, x._1))
+  }
   // Punto 4 -------------------------------------------------------------------
 
   /**
