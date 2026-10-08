@@ -98,31 +98,28 @@ $$
 Evaluamos la función:
 
 $$
-\operatorname{cesar}(c \cdot r,k)
+\text{cesar}(c \cdot r,k)
 \rightarrow
-\operatorname{desplazar}(c,k)
-+
-\operatorname{cesar}(r,k)
+desplazar(c,k)
++\text{cesar}(r,k)
 $$
 
 Aplicando la hipótesis de inducción:
 
 $$
 \begin{aligned}
-\operatorname{desplazar}(c,k)
-+
-\text{cesar}(r,k)
+\text{desplazar}(c,k)
++\text{cesar}(r,k)
 &=
-\operatorname{desplazar}(c,k)
-+
-C(r,k)
+\text{desplazar}(c,k)
++C(r,k)
 \end{aligned}
 $$
 
 Por la definición de $C$:
 
 $$
-\operatorname{desplazar}(c,k) + C(r,k)
+\text{desplazar}(c,k) + C(r,k)
 =
 C(c \cdot r,k)
 $$
@@ -226,7 +223,7 @@ $$
 Por lo tanto:
 
 $$
-\operatorname{Inv}(M,"")
+\text{Inv}(M,"")
 $$
 
 se cumple en el estado inicial.
@@ -291,15 +288,13 @@ $$
 acc' + C(r,k)
 &=
 \left(
-acc+\operatorname{desplazar}(c,k)
+acc+\text{desplazar}(c,k)
 \right)
-+
-C(r,k) \\
++C(r,k) \\
 &=
 acc+
-\operatorname{desplazar}(c,k)
-+
-C(r,k) \\
+\text{desplazar}(c,k)
++C(r,k) \\
 &=
 C(M,k)
 \end{aligned}
@@ -308,7 +303,7 @@ $$
 Por lo tanto:
 
 $$
-\operatorname{Inv}(r,acc')
+\text{Inv}(r,acc')
 $$
 
 El invariante se conserva después de cada paso.
