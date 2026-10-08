@@ -32,7 +32,7 @@ class CifradosClasicos {
 
   def cesar(m: Mensaje, k: Int): Mensaje =
     if(m.isEmpty()) ""
-    else desplazar(m(0),k) + cesar(m.substring(1),k)
+    else desplazar(m.head,k) + cesar(m.tail,k)
 
 
 
@@ -48,7 +48,7 @@ class CifradosClasicos {
     @tailrec
   final def cesarCola(m: Mensaje, k: Int, acc: Mensaje = ""): Mensaje =
     if(m.isEmpty) acc
-    else cesarCola(m.substring(1),k, acc + desplazar(m(0),k))
+    else cesarCola(m.tail,k, acc + desplazar(m.head,k))
 
   // Punto 3 -------------------------------------------------------------------
 
