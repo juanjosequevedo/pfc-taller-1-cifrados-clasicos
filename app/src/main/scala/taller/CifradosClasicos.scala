@@ -106,7 +106,11 @@ class CifradosClasicos {
     val lista = frecuencias(m)
 
     if (lista.isEmpty) 0
-    else Math.floorMod(lista.head._1 - 'e', letras)
+    else
+      {
+        val (caracter, cantidad) = lista.head
+        Math.floorMod(caracter - 'e', letras)
+      }
   }
 
   def romperCesar(m: Mensaje): Mensaje =
