@@ -1,279 +1,429 @@
-# Ejemplo de informe de corrección
+# Informe de corrección — Taller 1: Cifrados Clásicos
 
-Fundamentos de Programación Funcional y Concurrente.
-Documento realizado por el docente Juan Francisco Díaz.
+## 1. Corrección de `cesar`
 
-## 1. Argumentar la corrección de programas recursivos
-
-Sea $f : A \to B$ una función, y $A$ un conjunto definido recursivamente
-(recordar la definición de Matemáticas Discretas I), como por ejemplo los
-naturales o las listas.
-
-Sea $P_f$ un programa recursivo (lineal o en árbol) desarrollado en Scala (o en
-cualquier lenguaje de programación) hecho para calcular $f$:
+La función implementada es:
 
 ```scala
-def Pf(a: A): B = { // Pf recibe a de tipo A, y devuelve f(a) de tipo B
-  ...
+def cesar(m: Mensaje, k: Int): Mensaje =
+  if(m.isEmpty()) ""
+  else desplazar(m(0), k) + cesar(m.substring(1), k)
+```
+
+Queremos demostrar que la función devuelve correctamente el mensaje cifrado
+mediante el desplazamiento César.
+
+Definimos la función matemática $C$ que representa el cifrado César sobre un
+mensaje:
+
+$$
+C("") = ""
+$$
+
+y para un mensaje no vacío $m = c \cdot r$:
+
+$$
+C(c \cdot r,k)
+=
+\operatorname{desplazar}(c,k) + C(r,k)
+$$
+
+donde $c$ es el primer carácter del mensaje y $r$ es el resto del mensaje.
+
+Queremos demostrar:
+
+$$
+\forall m \in \text{String},\ \forall k \in \mathbb{Z}:
+\quad
+\text{cesar}(m,k) = C(m,k)
+$$
+
+La demostración se realiza mediante inducción estructural sobre el mensaje.
+
+### Caso base
+
+Sea:
+
+$$
+m = ""
+$$
+
+Al evaluar el programa:
+
+$$
+\begin{aligned}
+\text{cesar}("",k)
+&\rightarrow
+\text{if } "".isEmpty()\ ""\ \text{else }\ldots \\
+&\rightarrow ""
+\end{aligned}
+$$
+
+Por definición de $C$:
+
+$$
+C("",k) = ""
+$$
+
+Por lo tanto:
+
+$$
+\text{cesar}("",k) = C("",k)
+$$
+
+El caso base se cumple.
+
+### Caso de inducción
+
+Sea un mensaje no vacío:
+
+$$
+m = c \cdot r
+$$
+
+donde $c$ es el primer carácter y $r$ es el resto del mensaje.
+
+La hipótesis de inducción es:
+
+$$
+\text{cesar}(r,k) = C(r,k)
+$$
+
+Debemos demostrar:
+
+$$
+\text{cesar}(c \cdot r,k) = C(c \cdot r,k)
+$$
+
+Evaluamos la función:
+
+$$
+\operatorname{cesar}(c \cdot r,k)
+\rightarrow
+\operatorname{desplazar}(c,k)
++
+\operatorname{cesar}(r,k)
+$$
+
+Aplicando la hipótesis de inducción:
+
+$$
+\begin{aligned}
+\operatorname{desplazar}(c,k)
++
+\text{cesar}(r,k)
+&=
+\operatorname{desplazar}(c,k)
++
+C(r,k)
+\end{aligned}
+$$
+
+Por la definición de $C$:
+
+$$
+\operatorname{desplazar}(c,k) + C(r,k)
+=
+C(c \cdot r,k)
+$$
+
+Por lo tanto:
+
+$$
+\text{cesar}(c \cdot r,k) = C(c \cdot r,k)
+$$
+
+Así, por inducción estructural:
+
+$$
+\boxed{
+\forall m \in \text{String},\ \forall k \in \mathbb{Z}:
+\text{cesar}(m,k)=C(m,k)
 }
-```
+$$
 
-¿Cómo argumentar que $P_f(a)$ siempre devuelve $f(a)$ como respuesta? Es decir,
-¿cómo argumentar que $P_f$ es correcto con respecto a su especificación?
+Por lo tanto, `cesar` es correcta respecto a la especificación del cifrado
+César.
 
-La respuesta es sencilla: demostrando el siguiente teorema.
+---
 
-```math
-\forall a \in A : P_f(a) == f(a)
-```
+## 2. Corrección de `cesarCola`
 
-Cuando uno tiene que demostrar que algo se cumple para todos los elementos de
-un conjunto definido recursivamente, es natural usar inducción estructural. En
-términos prácticos, esto significa demostrar que:
-
-- Para cada valor básico $a$ de $A$, se tiene que $P_f(a) == f(a)$.
-- Para cada valor $a \in A$ construido recursivamente a partir de otro(s)
-  valor(es) $a' \in A$, se tiene que
-  $P_f(a') == f(a') \rightarrow P_f(a) == f(a)$. (Esta es la hipótesis de
-  inducción).
-
-### Ejemplo: factorial recursivo
-
-Sea $f : \mathbb{N} \to \mathbb{N}$ la función que calcula el factorial de un
-número natural, es decir, $f(n) = n!$. Y sea $P_f$ el siguiente programa en
-Scala:
+La función implementada es:
 
 ```scala
-def Pf(n: Int): Int = { // Pf recibe n de tipo Int, y devuelve n! de tipo Int
-  if (n == 0) 1 else n * Pf(n - 1)
+@tailrec
+final def cesarCola(
+  m: Mensaje,
+  k: Int,
+  acc: Mensaje = ""
+): Mensaje =
+  if(m.isEmpty) acc
+  else cesarCola(
+    m.substring(1),
+    k,
+    acc + desplazar(m(0), k)
+  )
+```
+
+Para demostrar su corrección se utiliza un invariante sobre el estado de la
+función.
+
+Sea $M$ el mensaje original que se desea cifrar y sea $C(M,k)$ su resultado
+correcto según la función matemática definida anteriormente.
+
+Representamos un estado de `cesarCola` mediante:
+
+$$
+s = (m,acc)
+$$
+
+donde:
+
+- $m$ es la parte del mensaje que todavía falta por procesar.
+- $acc$ es el resultado que ya ha sido construido.
+
+### Invariante
+
+Definimos el siguiente invariante:
+
+$$
+\boxed{
+\operatorname{Inv}(m,acc)
+\equiv
+acc + C(m,k) = C(M,k)
 }
-```
+$$
 
-Vamos a demostrar que $\forall n \in \mathbb{N} : P_f(n) == n!$
+Esto significa que el resultado que ya está almacenado en `acc`, junto con
+el resultado que todavía falta obtener a partir de `m`, corresponde
+exactamente al cifrado del mensaje original $M$.
 
-**Caso base:** $n = 0$
+---
 
-```math
-P_f(0) \rightarrow \text{if } (0 == 0)\ 1 \text{ else } 0 \ast P_f(-1) \rightarrow 1
-```
+## 2.1. Estado inicial
 
-Por otro lado, $f(0) = 0! = 1$. Entonces $P_f(0) == f(0)$.
+La función comienza con:
 
-**Caso de inducción:** $n = k + 1$, $k \geq 0$. Hay que demostrar:
-$P_f(k) == f(k) \rightarrow P_f(k + 1) == f(k + 1)$
+$$
+s_0 = (M,"")
+$$
 
-```math
-P_f(k+1) \rightarrow \text{if } (k+1 == 0)\ 1 \text{ else } (k+1) \ast P_f(k) \rightarrow (k+1) \ast P_f(k)
-```
+Debemos demostrar que el estado inicial cumple el invariante.
 
-Usando la hipótesis de inducción (HI):
+Sustituyendo:
 
-```math
-\rightarrow (k+1) \ast k! = (k+1)!
-```
+$$
+\begin{aligned}
+acc + C(m,k)
+&=
+"" + C(M,k) \\
+&=
+C(M,k)
+\end{aligned}
+$$
 
-Por lo tanto, $P_f(k + 1) == f(k + 1)$.
+Por lo tanto:
 
-Concluimos por inducción que $\forall n \in \mathbb{N} : P_f(n) == n!$
+$$
+\operatorname{Inv}(M,"")
+$$
 
-### Ejemplo: el máximo de una lista
+se cumple en el estado inicial.
 
-Sea $f : \text{List}[\mathbb{N}] \to \mathbb{N}$ la función que calcula el
-máximo de una lista de enteros positivos, no vacía. Y sea $P_f$ el siguiente
-programa en Scala:
+---
+
+## 2.2. Conservación del invariante
+
+Supongamos que el estado actual es:
+
+$$
+s=(c \cdot r,acc)
+$$
+
+donde $c$ es el primer carácter del mensaje y $r$ es el resto.
+
+Suponemos como hipótesis que se cumple el invariante:
+
+$$
+acc + C(c \cdot r,k)=C(M,k)
+$$
+
+Por definición de $C$:
+
+$$
+C(c \cdot r,k)
+=
+\operatorname{desplazar}(c,k)+C(r,k)
+$$
+
+Por lo tanto:
+
+$$
+acc+
+\operatorname{desplazar}(c,k)+C(r,k)
+=
+C(M,k)
+$$
+
+La función realiza la siguiente transformación:
+
+$$
+(c \cdot r,acc)
+\rightarrow
+\left(
+r,\,
+acc+\operatorname{desplazar}(c,k)
+\right)
+$$
+
+Sea:
+
+$$
+acc' =
+acc+\operatorname{desplazar}(c,k)
+$$
+
+Entonces:
+
+$$
+\begin{aligned}
+acc' + C(r,k)
+&=
+\left(
+acc+\operatorname{desplazar}(c,k)
+\right)
++
+C(r,k) \\
+&=
+acc+
+\operatorname{desplazar}(c,k)
++
+C(r,k) \\
+&=
+C(M,k)
+\end{aligned}
+$$
+
+Por lo tanto:
+
+$$
+\operatorname{Inv}(r,acc')
+$$
+
+El invariante se conserva después de cada paso.
+
+---
+
+## 2.3. Estado final
+
+La función termina cuando:
+
+$$
+m = ""
+$$
+
+En ese momento el estado tiene la forma:
+
+$$
+("",acc)
+$$
+
+Por el invariante:
+
+$$
+acc+C("",k)=C(M,k)
+$$
+
+Como:
+
+$$
+C("",k)=""
+$$
+
+tenemos:
+
+$$
+acc+""=C(M,k)
+$$
+
+y por lo tanto:
+
+$$
+acc=C(M,k)
+$$
+
+El programa devuelve precisamente `acc`, así que:
+
+$$
+\boxed{
+\text{cesarCola}(M,k)=C(M,k)
+}
+$$
+
+---
+
+## 2.4. Terminación
+
+En cada paso de `cesarCola`, el mensaje se reemplaza por:
 
 ```scala
-def maxLin(l: List[Int]): Int = {
-  if (l.tail.isEmpty) l.head
-  else math.max(maxLin(l.tail), l.head)
-}
+m.substring(1)
 ```
 
-Demostraremos que:
+Por lo tanto, su longitud disminuye en una unidad:
 
-```math
-\forall n \in \mathbb{N} \setminus \{0\} : P_f(\text{List}(a_1, a_2, \ldots, a_n)) == f(\text{List}(a_1, a_2, \ldots, a_n))
-```
+$$
+|m'| = |m|-1
+$$
 
-**Caso base:** $n = 1$
+La longitud del mensaje es un número natural y no puede disminuir
+indefinidamente.
 
-```math
-P_f(\text{List}(a_1)) \rightarrow \text{if } \text{List}(a_1).\text{tail.isEmpty then } \text{List}(a_1).\text{head else } \ldots \rightarrow \text{List}(a_1).\text{head} \rightarrow a_1
-```
+Después de un número finito de pasos se alcanza:
 
-Por otro lado, $f(\text{List}(a_1)) = a_1$. Entonces
-$P_f(\text{List}(a_1)) == f(\text{List}(a_1))$.
+$$
+|m|=0
+$$
 
-**Caso de inducción:** $n = k + 1$, $k \geq 1$. Se debe demostrar:
+es decir:
 
-```math
-P_f(\text{List}(b_1, b_2, \ldots, b_k)) == f(\text{List}(b_1, b_2, \ldots, b_k)) \rightarrow P_f(\text{List}(a_1, a_2, \ldots, a_{k+1})) == f(\text{List}(a_1, a_2, \ldots, a_{k+1}))
-```
+$$
+m=""
+$$
 
-Empecemos por calcular qué devuelve $P_f$ usando el modelo de sustitución:
-
-```math
-P_f(L) \rightarrow \text{if } L.\text{tail.isEmpty then } L.\text{head else math.max}(P_f(L.\text{tail}), L.\text{head})
-```
-
-```math
-\rightarrow \text{math.max}(P_f(\text{List}(a_2, \ldots, a_{k+1})), a_1)
-```
-
-Sea $b = P_f(\text{List}(a_2, \ldots, a_{k+1}))$; por la hipótesis de
-inducción, $b = f(\text{List}(a_2, \ldots, a_{k+1}))$. Hay dos posibilidades:
-
-- Si $\text{math.max}(b, a_1) = b$, entonces $b \geq a_1$ y
- $b == f(\text{List}(a_1, a_2, \ldots, a_{k+1}))$.
-- Si $\text{math.max}(b, a_1) = a_1$, entonces $a_1 \geq b$ y
- $a_1 == f(\text{List}(a_1, a_2, \ldots, a_{k+1}))$.
-
-Por lo tanto, $P_f(L) == f(L)$.
-
-Concluimos por inducción que:
-
-```math
-\forall n \in \mathbb{N} \setminus \{0\} : P_f(\text{List}(a_1, a_2, \ldots, a_n)) == f(\text{List}(a_1, a_2, \ldots, a_n))
-```
-
-## 2. Argumentar la corrección de programas iterativos
-
-Para argumentar la corrección de programas iterativos, se debe formalizar cómo
-es la iteración. Esto implica definir:
-
-- Cómo se representa un estado de la iteración, $s$.
-- Cuál es el estado inicial, $s_0$.
-- Cuál es el estado final (o cómo se reconoce que un estado es final): $s_f$.
-- Qué condición (o predicado) cumple todo estado: $\text{Inv}(s)$ (invariante
-  de la iteración).
-- El mecanismo para pasar de un estado al siguiente: $\text{transformar}(s)$.
-  Si $s_i$ es el estado $i$, entonces $\text{transformar}(s_i) = s_{i+1}$.
-
-Un programa iterativo tiene la siguiente forma:
+En ese momento se cumple la condición:
 
 ```scala
-def Pf(a: A): B = { // Pf recibe a de tipo A, y devuelve f(a) de tipo B
-  def Pf_iter(s: Estado): B =
-    if (esFinal(s)) respuesta(s) else Pf_iter(transformar(s))
-  Pf_iter(s0)
+m.isEmpty
+```
+
+y la función termina.
+
+Por lo tanto, `cesarCola` siempre alcanza su estado final para cualquier
+mensaje finito.
+
+---
+
+## 2.5. Conclusión de la corrección
+
+Se ha demostrado que:
+
+1. El estado inicial de `cesarCola` cumple el invariante.
+2. El invariante se conserva en cada transformación del estado.
+3. Cuando se alcanza el estado final, el acumulador contiene exactamente el
+   cifrado César del mensaje original.
+4. El estado final siempre se alcanza porque la longitud del mensaje
+   disminuye en cada paso.
+
+Por lo tanto:
+
+$$
+\boxed{
+\forall M \in \text{String},\ \forall k \in \mathbb{Z}:
+\text{cesarCola}(M,k)=C(M,k)
 }
-```
+$$
 
-Demostración de corrección:
-
-- $\text{Inv}(s_0)$: el estado inicial cumple la condición invariante.
-- Si $(s_i \neq s_f \land \text{Inv}(s_i)) \rightarrow \text{Inv}(\text{transformar}(s_i))$:
-  el nuevo estado cumple la condición invariante si el estado anterior la
-  cumplía.
-- De lo anterior se concluye $\text{Inv}(s_f)$, es decir, el estado final
-  cumple la condición invariante. Luego,
-  $\text{Inv}(s_f) \rightarrow \text{respuesta}(s_f) == f(a)$.
-- Finalmente, demostrar que siempre se llega al estado final $s_f$. Esto
-  implica que
-  $P_f(a) == \text{iter}(s_0) == \text{respuesta}(s_f) == f(a)$.
-
-### Ejemplo: factorial iterativo
-
-Considere el siguiente programa iterativo en Scala para calcular la función
-factorial:
-
-```scala
-def Pf(n: Int): Int = { // Pf recibe n de tipo Int, y devuelve n! de tipo Int
-  def Pf_iter(i: Int, n: Int, ac: Int): Int =
-    if (i > n) ac else Pf_iter(i + 1, n, i * ac)
-  Pf_iter(1, n, 1)
-}
-```
-
-Este programa implementa el siguiente proceso iterativo:
-
-- Un estado $s = (i, n, ac)$.
-- El estado inicial es $s_0 = (1, n, 1)$.
-- $(i, n, ac)$ es final si $i > n$, o lo que es lo mismo, si $i = n + 1$.
-- La invariante de ciclo es
-  $\text{Inv}(i, n, ac) \equiv i \leq n + 1 \land ac = (i-1)!$.
-  La invariante de ciclo es una relación que SIEMPRE se cumple en el ciclo.
-- $\text{transformar}((i, n, ac)) = (i+1, n, i \ast ac)$.
-
-Ahora, demostramos los puntos mencionados:
-
-**1.** $\text{Inv}(s_0)$: el estado inicial cumple la condición invariante.
-
-```math
-s_0 = (1, n, 1) \implies 1 \leq n + 1 \land 1 = 0!
-```
-
-**2.** La invariante se mantiene con la transformación de estados,
-$(s_i \neq s_f \land \text{Inv}(s_i)) \rightarrow \text{Inv}(\text{transformar}(s_i))$:
-
-1. Primer cambio, $i = i + 1$, lo que implica $ac = ((i+1) - 1)! = i!$.
-2. Segundo cambio, $ac = i \ast ac$, entonces $ac = (i - 1)! \ast i = i!$.
-3. Como se puede ver en ambos cambios indicados en la transformación, la
-   invariante se mantiene.
-
-**3.** $\text{Inv}(s_f) \rightarrow \text{respuesta}(s_f) == f(a)$
-
-```math
-(n + 1 \leq n + 1) \land ac = ((n+1)-1)! \rightarrow ac == n!
-```
-
-**4.** En cada paso, la componente $i$ del estado incrementa, acercándose a $n+1$.
-Después de $n$ iteraciones, se alcanza $n+1$.
-
-Esto implica que $P_f(n) == \text{iter}(1, n, 1) == n!$
-
-### Ejemplo: el máximo de una lista
-
-Se desea calcular el máximo de una lista de enteros positivos, no vacía. Sea
-$f : \text{List}[\mathbb{N}] \to \mathbb{N}$ la función que calcula ese valor.
-Y sea $P_f$ el siguiente programa en Scala:
-
-```scala
-def maxIt(l: List[Int]): Int = {
-  def maxAux(max: Int, l: List[Int]): Int = {
-    if (l.isEmpty) max
-    else maxAux(math.max(max, l.head), l.tail)
-  }
-  maxAux(l.head, l.tail)
-}
-```
-
-Este programa implementa el siguiente proceso iterativo:
-
-- Un estado $s = (max, l)$ donde $l = \text{List}(a_i, a_{i+1}, \ldots, a_k)$
-  es una cola de $L$.
-- El estado inicial es
-  $s_0 = (L.\text{head}, L.\text{tail}) = (a_1, \text{List}(a_2, \ldots, a_k))$.
-- $s = (max, l)$ es final si $l$ es vacía.
-- $\text{Inv}(max, l) \equiv l = \text{List}(a_i, a_{i+1}, \ldots, a_k) \land max = f(\text{List}(a_1, a_2, \ldots, a_{i-1}))$.
-- $\text{transformar}((max, l)) = (nmax, l.\text{tail})$ donde $nmax = max$ si
-  $max \geq l.\text{head}$, y $nmax = l.\text{head}$ si no.
-
-Demostración de los puntos:
-
-**1.** $\text{Inv}(s_0)$: el estado inicial cumple la condición invariante.
-
-```math
-s_0 = (a_1, \text{List}(a_2, \ldots, a_k)) \implies a_1 = f(\text{List}(a_1))
-```
-
-**2.** $(s_i \neq s_f \land \text{Inv}(s_i)) \rightarrow \text{Inv}(\text{transformar}(s_i))$
-
-```math
-\neg\, l.\text{isEmpty} \land l = \text{List}(a_i, a_{i+1}, \ldots, a_k) \land max = f(\text{List}(a_1, a_2, \ldots, a_{i-1}))
-```
-
-```math
-\rightarrow l.\text{tail} = \text{List}(a_{i+1}, \ldots, a_k) \land nmax = f(\text{List}(a_1, \ldots, a_i))
-```
-
-**3.** $\text{Inv}(s_f) \rightarrow \text{respuesta}(s_f) == f(a)$
-
-```math
-\text{Inv}((max, \text{List}())) \rightarrow max = f(\text{List}(a_1, \ldots, a_k))
-```
-
-**4.** En cada paso, la lista $l$ se reduce, acercándose a ser vacía. Después de
-$k$ iteraciones, $l = \text{List}()$.
-
-Esto implica que $P_f(L) == \text{maxAux}(L.\text{head}, L.\text{tail}) == f(L)$
+Así, `cesarCola` es correcta respecto a la especificación del cifrado
+César.
