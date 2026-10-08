@@ -44,6 +44,7 @@ class CifradosClasicos {
    * Cuando la función esté escrita, anótela con
    * @tailrec: el compilador
    * comprueba que la llamada recursiva sea lo último que hace.
+   *
    */
     @tailrec
   final def cesarCola(m: Mensaje, k: Int, acc: Mensaje = ""): Mensaje =
