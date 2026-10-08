@@ -32,7 +32,7 @@ class CifradosClasicos {
 
   def cesar(m: Mensaje, k: Int): Mensaje =
     if(m.isEmpty()) ""
-    else desplazar(m(0),k) + cesar(m.substring(1),k)
+    else desplazar(m.head,k) + cesar(m.tail,k)
 
 
 
@@ -48,7 +48,7 @@ class CifradosClasicos {
     @tailrec
   final def cesarCola(m: Mensaje, k: Int, acc: Mensaje = ""): Mensaje =
     if(m.isEmpty) acc
-    else cesarCola(m.substring(1),k, acc + desplazar(m(0),k))
+    else cesarCola(m.tail,k, acc + desplazar(m.head,k))
 
   // Punto 3 -------------------------------------------------------------------
 
@@ -68,12 +68,18 @@ class CifradosClasicos {
 
         if (letra >= 'a'  && letra <= 'z') {
 
-          val existe = acc.exists(x => x._1 == letra)
+          val existe = acc.exists(x => { val (caracter, cantidad) = x
+            caracter == letra})
 
           if (existe)
-            aux(RestoPalabra.tail, acc.map(x => if
-            (x._1 == letra) (x._1, x._2 + 1)
-            else x) )
+            aux(RestoPalabra.tail, acc.map(x => {
+              val (caracter, cantidad) = x
+
+              if (caracter == letra)
+                (caracter, cantidad+1)
+              else
+                (caracter, cantidad)
+            }))
           else
             aux(RestoPalabra.tail, (letra, 1) :: acc)
         }
@@ -83,7 +89,10 @@ class CifradosClasicos {
       }
     }
 
-    aux(m, List()).sortBy(x => (-x._2, x._1))
+    aux(m, List()).sortBy(x => {
+      val (caracter, cantidad) = x
+      (-cantidad, caracter)
+    })
   }
 
 
@@ -97,7 +106,11 @@ class CifradosClasicos {
     val lista = frecuencias(m)
 
     if (lista.isEmpty) 0
-    else Math.floorMod(lista.head._1 - 'e', letras)
+    else
+      {
+        val (caracter, cantidad) = lista.head
+        Math.floorMod(caracter - 'e', letras)
+      }
   }
 
   def romperCesar(m: Mensaje): Mensaje =
