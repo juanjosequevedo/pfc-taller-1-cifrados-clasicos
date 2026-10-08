@@ -1,994 +1,310 @@
-# Proceso — Taller 1: Cifrados Clásicos
+Proceso
+# Informe de proceso — Taller 1: Cifrados clásicos
 
-## 1. Funciones auxiliares
+Fundamentos de Programación Funcional y Concurrente.
 
-Antes de explicar las funciones principales del cifrado César, es necesario
-explicar las funciones y valores auxiliares que intervienen durante su
-ejecución.
+## 1. César con recursión lineal
 
----
-
-## 1.1. `letras`
-
-```scala
-val letras = 26
-```
-
-`letras` representa la cantidad de caracteres del alfabeto inglés utilizado
-por el cifrado.
-
-Su valor es `26`, por lo que las posiciones válidas del alfabeto son:
-
-```text
-0, 1, 2, ..., 25
-```
-
-Este valor se utiliza posteriormente en `Math.floorMod` para mantener el
-resultado dentro de ese rango.
-
----
-
-## 1.2. `primera`
-
-```scala
-val primera = 'a'.toInt
-```
-
-`primera` almacena el valor entero correspondiente al carácter `'a'`.
-
-Se utiliza para convertir una letra del alfabeto en una posición relativa
-entre `0` y `25`.
-
-Por ejemplo:
-
-```text
-'a'.toInt - primera → 0
-'b'.toInt - primera → 1
-'c'.toInt - primera → 2
-```
-
-De esta manera, cada letra puede tratarse como una posición dentro del
-alfabeto.
-
----
-
-## 1.3. Función `esMinuscula`
-
-La función es:
-
-```scala
-def esMinuscula(c: Char): Boolean =
-  c >= 'a' && c <= 'z'
-```
-
-Esta función recibe un carácter y determina si pertenece al conjunto de
-letras minúsculas del alfabeto inglés.
-
-Ejemplos:
-
-```text
-esMinuscula('a') → true
-esMinuscula('m') → true
-esMinuscula('z') → true
-
-esMinuscula('A') → false
-esMinuscula('1') → false
-esMinuscula(' ') → false
-```
-
-Su resultado es utilizado por `desplazar` para decidir si el carácter debe
-ser cifrado o mantenerse sin modificaciones.
-
----
-
-## 1.4. Función `desplazar`
-
-La función es:
-
-```scala
-def desplazar(letra: Char, k: Int): Char =
-  if(esMinuscula(letra))
-    (primera + Math.floorMod(letra - primera + k, letras)).toChar
-  else letra
-```
-
-Esta función recibe:
-
-- `letra`: carácter que se quiere desplazar.
-- `k`: cantidad de posiciones que se debe desplazar.
-
-Su función es realizar el desplazamiento correspondiente a una letra del
-alfabeto.
-
-Primero se verifica:
-
-```scala
-esMinuscula(letra)
-```
-
-Si el carácter es una letra minúscula, se calcula su nueva posición.
-
-Si no lo es, se ejecuta:
-
-```scala
-else letra
-```
-
-por lo que el carácter se devuelve sin cambios.
-
-### Ejecución de `desplazar('a', 3)`
-
-El proceso puede representarse mediante el siguiente diagrama:
-
-```mermaid
-flowchart TD
-    A["desplazar('a', 3)"] --> B["esMinuscula('a')"]
-    B --> C["true"]
-    C --> D["'a'.toInt - primera"]
-    D --> E["0"]
-    E --> F["0 + 3"]
-    F --> G["3"]
-    G --> H["Math.floorMod(3, 26)"]
-    H --> I["3"]
-    I --> J["primera + 3"]
-    J --> K["'d'"]
-    K --> L["desplazar devuelve 'd'"]
-```
-
-Por lo tanto:
-
-```text
-desplazar('a', 3) → 'd'
-```
-
----
-
-## 1.5. ¿Por qué se utiliza `Math.floorMod`?
-
-En el cifrado César, la posición final de una letra debe estar siempre entre
-`0` y `25`.
-
-La función utiliza:
-
-```scala
-Math.floorMod(valor, 26)
-```
-
-para garantizar esto.
-
-Cuando el valor es positivo, `Math.floorMod` puede producir el mismo
-resultado que `%`.
-
-Por ejemplo:
-
-```text
-28 % 26 → 2
-Math.floorMod(28, 26) → 2
-```
-
-Sin embargo, el desplazamiento `k` también puede ser negativo.
-
-Por ejemplo, para desplazar `'a'` tres posiciones hacia atrás:
-
-```text
-'a' → posición 0
-
-0 + (-3) = -3
-```
-
-Con `%`:
-
-```text
--3 % 26 → -3
-```
-
-El resultado es negativo y no corresponde a una posición válida del
-alfabeto.
-
-Con `Math.floorMod`:
-
-```text
-Math.floorMod(-3, 26) → 23
-```
-
-La posición `23` corresponde a `'x'`.
-
-Por lo tanto:
-
-```text
-desplazar('a', -3) → 'x'
-```
-
-Así, `Math.floorMod` permite que los desplazamientos funcionen
-correctamente tanto hacia adelante como hacia atrás.
-
----
-
-## 1.6. Vuelta al inicio del alfabeto
-
-`Math.floorMod` también permite que el desplazamiento vuelva al comienzo del
-alfabeto cuando se supera la posición `25`.
-
-Por ejemplo:
-
-```text
-'z' → posición 25
-
-25 + 3 = 28
-```
-
-Entonces:
-
-```text
-Math.floorMod(28, 26) → 2
-```
-
-La posición `2` corresponde a `'c'`.
-
-Por lo tanto:
-
-```text
-desplazar('z', 3) → 'c'
-```
-
-El alfabeto se comporta de forma circular:
-
-```text
-... x → y → z → a → b → c ...
-```
-
----
-
-## 1.7. Caracteres que no se cifran
-
-La condición:
-
-```scala
-if(esMinuscula(letra))
-```
-
-hace que solamente las letras minúsculas entre `'a'` y `'z'` sean
-cifradas.
-
-Cuando el carácter no pertenece a este rango, se ejecuta:
-
-```scala
-else letra
-```
-
-Por ejemplo:
-
-```text
-desplazar('A', 3) → 'A'
-desplazar(' ', 3) → ' '
-desplazar('1', 3) → '1'
-desplazar('.', 3) → '.'
-```
-
-De esta forma, los caracteres diferentes de las letras minúsculas se
-conservan sin modificaciones.
-
----
-
-# 2. Cifrado César con recursión lineal
-
-La función implementada es:
+### Definición del algoritmo
 
 ```scala
 def cesar(m: Mensaje, k: Int): Mensaje =
-  if(m.isEmpty()) ""
-  else desplazar(m(0), k) + cesar(m.substring(1), k)
+  if (m.isEmpty) ""
+  else desplazar(m.head, k).toString + cesar(m.tail, k)
 ```
 
-La función recibe:
+`m` es el mensaje y `k` es el desplazamiento. `head` toma el primer
+carácter y `tail` obtiene el resto.
 
-- `m`: mensaje que se quiere cifrar.
-- `k`: desplazamiento que se aplicará a cada letra.
+La función cifra solo las minúsculas de `a` a `z`. Los demás caracteres
+se conservan. Primero comprueba si el mensaje está vacío, antes de usar
+`head` o `tail`.
 
-Su funcionamiento consiste en tomar el primer carácter del mensaje,
-cifrarlo mediante `desplazar` y continuar procesando el resto del mensaje.
+### Caso base
 
----
+Si `m` está vacío, devuelve `""`.
 
-## 2.1. Caso base
+### Caso recursivo
 
-El caso base es:
+Se cifra el primer carácter y se llama a `cesar` con el resto.
+La unión queda pendiente hasta que esa llamada termine.
 
-```scala
-if(m.isEmpty()) ""
-```
+### Llamados paso a paso
 
-Cuando el mensaje está vacío, no quedan caracteres por procesar.
-
-Por ejemplo:
+Para `cesar("casa", 3)`:
 
 ```text
-cesar("", 3) → ""
+cesar("casa", 3) → "f" + cesar("asa", 3)
+cesar("asa", 3)  → "d" + cesar("sa", 3)
+cesar("sa", 3)   → "v" + cesar("a", 3)
+cesar("a", 3)    → "d" + cesar("", 3)
+cesar("", 3)    → ""
 ```
 
-La función devuelve una cadena vacía y termina el procesamiento.
+Al llegar al caso base hay cinco llamadas de `cesar` en la pila.
+Las cuatro anteriores esperan para unir su letra con el resultado.
 
----
-
-## 2.2. Procesamiento de un carácter
-
-Cuando el mensaje no está vacío, se obtiene su primer carácter mediante:
-
-```scala
-m(0)
-```
-
-Por ejemplo:
+Después se resuelven en este orden:
 
 ```text
-m = "abc"
-
-m(0) → 'a'
+cesar("a", 3)    → "d" + ""    → "d"
+cesar("sa", 3)   → "v" + "d"   → "vd"
+cesar("asa", 3)  → "d" + "vd"  → "dvd"
+cesar("casa", 3) → "f" + "dvd" → "fdvd"
 ```
 
-Después se utiliza:
-
-```scala
-desplazar(m(0), k)
-```
-
-Para el ejemplo:
-
-```text
-desplazar('a', 3) → 'd'
-```
-
-Al mismo tiempo se obtiene el resto del mensaje:
-
-```scala
-m.substring(1)
-```
-
-Por lo tanto:
-
-```text
-"abc".substring(1) → "bc"
-```
-
-La función continúa procesando ese nuevo mensaje.
-
----
-
-## 2.3. Ejecución de `cesar("abc", 3)`
-
-La ejecución comienza con:
-
-```text
-cesar("abc", 3)
-```
-
-El mensaje no está vacío.
-
-Se obtiene:
-
-```text
-m(0) → 'a'
-```
-
-Entonces se ejecuta:
-
-```text
-desplazar('a', 3)
-```
-
-que devuelve:
-
-```text
-'d'
-```
-
-El resto del mensaje es:
-
-```text
-"abc".substring(1) → "bc"
-```
-
-Por lo tanto, en este punto queda pendiente construir:
-
-```text
-'d' + resultado de cesar("bc", 3)
-```
-
-### Segundo paso
-
-Ahora se procesa:
-
-```text
-cesar("bc", 3)
-```
-
-Se obtiene:
-
-```text
-m(0) → 'b'
-```
-
-Se ejecuta:
-
-```text
-desplazar('b', 3) → 'e'
-```
-
-Y el resto del mensaje es:
-
-```text
-"bc".substring(1) → "c"
-```
-
-Queda pendiente:
-
-```text
-'e' + resultado de cesar("c", 3)
-```
-
-### Tercer paso
-
-Ahora:
-
-```text
-cesar("c", 3)
-```
-
-Se obtiene:
-
-```text
-m(0) → 'c'
-```
-
-Se ejecuta:
-
-```text
-desplazar('c', 3) → 'f'
-```
-
-Y:
-
-```text
-"c".substring(1) → ""
-```
-
-Queda:
-
-```text
-'f' + resultado de cesar("", 3)
-```
-
-### Cuarto paso
-
-Se alcanza el caso base:
-
-```text
-cesar("", 3) → ""
-```
-
-Ahora comienzan a resolverse las operaciones que habían quedado
-pendientes.
-
-```text
-cesar("c", 3)
-→ 'f' + ""
-→ "f"
-```
-
-Después:
-
-```text
-cesar("bc", 3)
-→ 'e' + "f"
-→ "ef"
-```
-
-Finalmente:
-
-```text
-cesar("abc", 3)
-→ 'd' + "ef"
-→ "def"
-```
-
-Por lo tanto:
-
-```text
-cesar("abc", 3) → "def"
-```
-
----
-## 2.4. Estado de la pila durante `cesar`
-
-En el primer nivel se tiene:
-
-```text
-┌────────────────────────────────┐
-│ cesar("abc", 3)                │
-│ pendiente: 'd' + resultado    │
-└────────────────────────────────┘
-```
-
-Después:
-
-```text
-┌────────────────────────────────┐
-│ cesar("abc", 3)                │
-│ pendiente: 'd' + resultado    │
-├────────────────────────────────┤
-│ cesar("bc", 3)                 │
-│ pendiente: 'e' + resultado    │
-└────────────────────────────────┘
-```
-
-Después:
-
-```text
-┌────────────────────────────────┐
-│ cesar("abc", 3)                │
-│ pendiente: 'd' + resultado    │
-├────────────────────────────────┤
-│ cesar("bc", 3)                 │
-│ pendiente: 'e' + resultado    │
-├────────────────────────────────┤
-│ cesar("c", 3)                  │
-│ pendiente: 'f' + resultado    │
-└────────────────────────────────┘
-```
-
-Finalmente se llega a:
-
-```text
-┌────────────────────────────────┐
-│ cesar("abc", 3)                │
-│ pendiente: 'd' + resultado    │
-├────────────────────────────────┤
-│ cesar("bc", 3)                 │
-│ pendiente: 'e' + resultado    │
-├────────────────────────────────┤
-│ cesar("c", 3)                  │
-│ pendiente: 'f' + resultado    │
-├────────────────────────────────┤
-│ cesar("", 3)                   │
-│ devuelve ""                    │
-└────────────────────────────────┘
-```
-
-Después de obtener la cadena vacía, las operaciones pendientes se completan
-en orden:
-
-```text
-cesar("", 3)   → ""
-cesar("c", 3)  → "f"
-cesar("bc", 3) → "ef"
-cesar("abc", 3) → "def"
-```
-
----
-
-## 2.5. Diagrama de ejecución de `cesar`
-
-El siguiente diagrama muestra las funciones que intervienen durante el
-procesamiento:
+### Diagrama de llamados
 
 ```mermaid
 sequenceDiagram
-    participant C1 as cesar("abc", 3)
-    participant D1 as desplazar('a', 3)
-    participant C2 as cesar("bc", 3)
-    participant D2 as desplazar('b', 3)
-    participant C3 as cesar("c", 3)
-    participant D3 as desplazar('c', 3)
-    participant C4 as cesar("", 3)
-
-    C1->>D1: procesa 'a'
-    D1-->>C1: devuelve 'd'
-    C1->>C2: continúa con "bc"
-
-    C2->>D2: procesa 'b'
-    D2-->>C2: devuelve 'e'
-    C2->>C3: continúa con "c"
-
-    C3->>D3: procesa 'c'
-    D3-->>C3: devuelve 'f'
-    C3->>C4: continúa con ""
-
-    C4-->>C3: devuelve ""
-    C3-->>C2: devuelve "f"
-    C2-->>C1: devuelve "ef"
-    C1-->>C1: devuelve "def"
+    participant A as cesar(casa, 3)
+    participant B as cesar(asa, 3)
+    participant C as cesar(sa, 3)
+    participant D as cesar(a, 3)
+    participant E as cesar(vacío, 3)
+    A->>B: espera unir f
+    B->>C: espera unir d
+    C->>D: espera unir v
+    D->>E: espera unir d
+    E-->>D: cadena vacía
+    D-->>C: d
+    C-->>B: vd
+    B-->>A: dvd
+    Note over A: devuelve fdvd
 ```
 
----
+La pila crece porque cada llamada tiene una unión pendiente.
+Para un mensaje de $n$ caracteres se alcanzan $n+1$ llamadas activas,
+contando el caso vacío.
 
-# 3. Cifrado César con recursión de cola
+## 2. César con recursión de cola
 
-La función implementada es:
+### Definición del algoritmo
 
 ```scala
 @tailrec
-final def cesarCola(
-  m: Mensaje,
-  k: Int,
-  acc: Mensaje = ""
-): Mensaje =
-  if(m.isEmpty) acc
-  else cesarCola(
-    m.substring(1),
-    k,
-    acc + desplazar(m(0), k)
-  )
+final def cesarCola(m: Mensaje, k: Int, acc: Mensaje = ""): Mensaje =
+  if (m.isEmpty) acc
+  else cesarCola(m.tail, k, acc + desplazar(m.head, k))
 ```
 
-La función recibe:
+`acc` guarda el resultado parcial. Si no se indica otro valor, comienza
+vacío. La anotación `@tailrec` comprueba que la llamada recursiva pueda
+ejecutarse sin acumular llamadas en la pila.
 
-- `m`: mensaje que se está procesando.
-- `k`: desplazamiento.
-- `acc`: acumulador que almacena el resultado construido hasta ese momento.
+### Caso base
 
-El acumulador comienza con:
+Cuando no queda mensaje, se devuelve `acc`.
+
+### Caso recursivo
+
+Se cifra el primer carácter y se agrega al acumulador antes de continuar
+con el resto. Después de la llamada no queda ninguna unión pendiente.
+
+### Llamados paso a paso
+
+Para `cesarCola("casa", 3)`:
 
 ```text
-acc = ""
+cesarCola("casa", 3, "")
+→ cesarCola("asa", 3, "f")
+→ cesarCola("sa", 3, "fd")
+→ cesarCola("a", 3, "fdv")
+→ cesarCola("", 3, "fdvd")
+→ "fdvd"
 ```
 
-y se va actualizando conforme se procesan las letras.
+| Paso | Mensaje restante | Acumulador |
+|---|---|---|
+| 1 | `"casa"` | `""` |
+| 2 | `"asa"` | `"f"` |
+| 3 | `"sa"` | `"fd"` |
+| 4 | `"a"` | `"fdv"` |
+| 5 | `""` | `"fdvd"` |
 
----
+### Diagrama de estados
 
-## 3.1. El acumulador `acc`
+Las cajas representan distintos momentos de un mismo marco de pila,
+es decir, del espacio usado por la llamada.
 
-Al comenzar:
+```mermaid
+flowchart TD
+    A["casa; acc vacío"] --> B["asa; acc f"]
+    B --> C["sa; acc fd"]
+    C --> D["a; acc fdv"]
+    D --> E["vacío; acc fdvd"]
+    E --> F["devuelve fdvd"]
+```
+
+Scala reutiliza ese marco porque la llamada recursiva es la última
+operación. La pila de esta función permanece constante, aunque el
+acumulador crece con el resultado.
+
+## 3. Conteo de frecuencias
+
+### Funcionamiento
+
+`frecuencias` usa el auxiliar `aux` para recorrer el mensaje.
+Su estado contiene `RestoPalabra` y la lista `acc`.
+
+En cada paso:
+
+- Si el carácter no es minúscula, continúa sin cambiar la lista.
+- Si es minúscula, `exists` comprueba si ya está registrada.
+- Si existe, `map` aumenta su cantidad.
+- Si no existe, se agrega `(letra, 1)` al inicio.
+
+Al terminar, `sortBy` ordena las parejas por cantidad descendente
+y por letra ascendente cuando hay empate.
+
+### Pasos de `frecuencias("aba!")`
+
+| Paso | Texto restante | `acc` | Acción |
+|---|---|---|---|
+| 1 | `"aba!"` | `List()` | Agrega `('a', 1)` |
+| 2 | `"ba!"` | `List(('a', 1))` | Agrega `('b', 1)` al inicio |
+| 3 | `"a!"` | `List(('b', 1), ('a', 1))` | Aumenta la cantidad de `a` |
+| 4 | `"!"` | `List(('b', 1), ('a', 2))` | Ignora el signo |
+| 5 | `""` | `List(('b', 1), ('a', 2))` | Devuelve la lista |
+
+Después de ordenar:
 
 ```text
-m = "abc"
-k = 3
-acc = ""
+List(('a', 2), ('b', 1))
 ```
 
-Después de procesar `'a'`:
+### Pila del recorrido
+
+`frecuencias` espera a que termine `aux` para ordenar la lista.
+Dentro de `aux`, la siguiente llamada es la última operación y
+`@tailrec` permite reutilizar su marco.
+
+```mermaid
+flowchart TD
+    A["aux: aba!; lista vacía"] --> B["aux: ba!; a:1"]
+    B --> C["aux: a!; b:1, a:1"]
+    C --> D["aux: !; b:1, a:2"]
+    D --> E["aux: vacío; devuelve la lista"]
+    E --> F["frecuencias: ordena a:2, b:1"]
+```
+
+`exists` y `map` terminan antes de pasar al siguiente estado.
+Por eso no quedan llamadas de `aux` esperando una operación posterior.
+
+## 4. Estimar y romper César
+
+### `desplazamientoProbable("hhh")`
+
+1. Llama a `frecuencias("hhh")`.
+2. Recibe `List(('h', 3))`.
+3. Toma `h`, la primera letra de la lista.
+4. Calcula la distancia desde `e` hasta `h`.
+5. Devuelve `3`.
+
+Mientras se cuentan las letras, `desplazamientoProbable` espera.
+Cuando recibe la lista, hace el cálculo y termina.
+Si la lista está vacía, devuelve `0`.
+
+### `romperCesar("hhh")`
+
+Primero obtiene el desplazamiento `3`. Después llama a
+`cesar("hhh", -3)`:
 
 ```text
-m = "bc"
-k = 3
-acc = "d"
+cesar("hhh", -3) → "e" + cesar("hh", -3)
+cesar("hh", -3)  → "e" + cesar("h", -3)
+cesar("h", -3)   → "e" + cesar("", -3)
+cesar("", -3)   → ""
 ```
 
-Después de procesar `'b'`:
+Al regresar se forman `"e"`, `"ee"` y `"eee"`.
 
-```text
-m = "c"
-k = 3
-acc = "de"
-```
-
-Después de procesar `'c'`:
-
-```text
-m = ""
-k = 3
-acc = "def"
-```
-
-El resultado parcial siempre se conserva dentro de `acc`.
-
----
-
-## 3.2. Caso base
-
-El caso base es:
-
-```scala
-if(m.isEmpty) acc
-```
-
-Cuando ya no quedan caracteres en el mensaje:
-
-```text
-m = ""
-```
-
-la función devuelve directamente el acumulador.
-
-Por ejemplo:
-
-```text
-cesarCola("", 3, "def")
-→ "def"
-```
-
----
-
-## 3.3. Procesamiento de un carácter
-
-Cuando el mensaje no está vacío, se obtiene:
-
-```scala
-m(0)
-```
-
-y se ejecuta:
-
-```scala
-desplazar(m(0), k)
-```
-
-El carácter cifrado se agrega al acumulador:
-
-```scala
-acc + desplazar(m(0), k)
-```
-
-Después se continúa con:
-
-```scala
-m.substring(1)
-```
-
-Por ejemplo, para:
-
-```text
-cesarCola("abc", 3, "")
-```
-
-se obtiene:
-
-```text
-m(0) → 'a'
-
-desplazar('a', 3) → 'd'
-
-"" + "d" → "d"
-```
-
-El siguiente estado es:
-
-```text
-cesarCola("bc", 3, "d")
-```
-
----
-
-## 3.4. Ejecución de `cesarCola("abc", 3)`
-
-### Paso 1
-
-Estado inicial:
-
-```text
-m = "abc"
-k = 3
-acc = ""
-```
-
-Se procesa:
-
-```text
-m(0) → 'a'
-```
-
-Luego:
-
-```text
-desplazar('a', 3) → 'd'
-```
-
-Se actualiza el acumulador:
-
-```text
-"" + "d" → "d"
-```
-
-El siguiente estado es:
-
-```text
-cesarCola("bc", 3, "d")
-```
-
-### Paso 2
-
-Ahora:
-
-```text
-m = "bc"
-k = 3
-acc = "d"
-```
-
-Se procesa:
-
-```text
-m(0) → 'b'
-```
-
-Luego:
-
-```text
-desplazar('b', 3) → 'e'
-```
-
-Se actualiza:
-
-```text
-"d" + "e" → "de"
-```
-
-El siguiente estado es:
-
-```text
-cesarCola("c", 3, "de")
-```
-
-### Paso 3
-
-Ahora:
-
-```text
-m = "c"
-k = 3
-acc = "de"
-```
-
-Se procesa:
-
-```text
-m(0) → 'c'
-```
-
-Luego:
-
-```text
-desplazar('c', 3) → 'f'
-```
-
-Se actualiza:
-
-```text
-"de" + "f" → "def"
-```
-
-El siguiente estado es:
-
-```text
-cesarCola("", 3, "def")
-```
-
-### Paso 4
-
-Se alcanza el caso base:
-
-```text
-cesarCola("", 3, "def")
-→ "def"
-```
-
-Por lo tanto:
-
-```text
-cesarCola("abc", 3) → "def"
-```
-
----
-
-## 3.5. Estado de la ejecución
-
-Los estados de la función son:
-
-| Paso | `m` | `k` | `acc` |
-|---|---|---:|---|
-| 1 | `"abc"` | 3 | `""` |
-| 2 | `"bc"` | 3 | `"d"` |
-| 3 | `"c"` | 3 | `"de"` |
-| 4 | `""` | 3 | `"def"` |
-
-En cada paso, `acc` contiene el resultado de las letras que ya fueron
-procesadas.
-
----
-
-## 3.6. Estado de la pila
-
-En el primer paso:
-
-```text
-┌───────────────────────────────────┐
-│ cesarCola("abc", 3, "")           │
-└───────────────────────────────────┘
-```
-
-Después:
-
-```text
-┌───────────────────────────────────┐
-│ cesarCola("bc", 3, "d")           │
-└───────────────────────────────────┘
-```
-
-Después:
-
-```text
-┌───────────────────────────────────┐
-│ cesarCola("c", 3, "de")           │
-└───────────────────────────────────┘
-```
-
-Finalmente:
-
-```text
-┌───────────────────────────────────┐
-│ cesarCola("", 3, "def")           │
-│ devuelve "def"                    │
-└───────────────────────────────────┘
-```
-
-El resultado parcial se encuentra en `acc` durante todo el proceso.
-
----
-
-## 3.7. Diagrama de ejecución de `cesarCola`
+En el caso base hay cuatro llamadas de `cesar`, además de
+`romperCesar`, que espera la respuesta.
 
 ```mermaid
 sequenceDiagram
-    participant C1 as cesarCola("abc", 3, "")
-    participant D1 as desplazar('a', 3)
-    participant C2 as cesarCola("bc", 3, "d")
-    participant D2 as desplazar('b', 3)
-    participant C3 as cesarCola("c", 3, "de")
-    participant D3 as desplazar('c', 3)
-    participant C4 as cesarCola("", 3, "def")
-
-    C1->>D1: procesa 'a'
-    D1-->>C1: devuelve 'd'
-    C1->>C2: continúa con acc = "d"
-
-    C2->>D2: procesa 'b'
-    D2-->>C2: devuelve 'e'
-    C2->>C3: continúa con acc = "de"
-
-    C3->>D3: procesa 'c'
-    D3-->>C3: devuelve 'f'
-    C3->>C4: continúa con acc = "def"
+    participant R as romperCesar(hhh)
+    participant D as desplazamientoProbable(hhh)
+    participant F as frecuencias(hhh)
+    participant C as cesar(hhh, -3)
+    R->>D: pide el desplazamiento
+    D->>F: cuenta las letras
+    F-->>D: h aparece 3 veces
+    D-->>R: 3
+    R->>C: aplica -3
+    Note over C: procesa hhh, hh, h y vacío
+    C-->>R: eee
 ```
 
----
+## 5. Combinaciones y Vigenère
 
-## 3.8. ¿Por qué `cesarCola` es recursión de cola?
+### 5.1. `combinaciones(3, 3)`
 
-La parte principal es:
-
-```scala
-else cesarCola(
-  m.substring(1),
-  k,
-  acc + desplazar(m(0), k)
-)
-```
-
-Antes de realizar la llamada se calcula el nuevo valor de `acc`.
-
-Por ejemplo:
+Cada llamada deja pendiente una multiplicación:
 
 ```text
-acc = "de"
-
-desplazar('c', 3) → 'f'
-
-"de" + "f" → "def"
+combinaciones(3, 3) → 2 * combinaciones(2, 3)
+combinaciones(2, 3) → 2 * combinaciones(1, 3)
+combinaciones(1, 3) → 3
 ```
 
-Después se ejecuta:
+En ese momento hay tres llamadas en la pila.
+Al regresar:
 
 ```text
-cesarCola("", 3, "def")
+combinaciones(2, 3) → 2 * 3 → 6
+combinaciones(3, 3) → 2 * 6 → 12
 ```
 
-La llamada a `cesarCola` queda como la última operación de la función.
-
-Por esta razón se puede utilizar:
-
-```scala
-@tailrec
+```mermaid
+sequenceDiagram
+    participant A as combinaciones(3, 3)
+    participant B as combinaciones(2, 3)
+    participant C as combinaciones(1, 3)
+    A->>B: espera multiplicar por 2
+    B->>C: espera multiplicar por 2
+    C-->>B: 3
+    B-->>A: 6
+    Note over A: devuelve 12
 ```
 
-La anotación `@tailrec` permite que el compilador compruebe que la función
-está escrita correctamente como una función recursiva de cola.
+Si la longitud es cero, devuelve uno directamente, porque existe
+un solo mensaje vacío.
+
+### 5.2. `vigenere("a a!a", "bc")`
+
+La letra `b` de la clave desplaza una posición y `c`, dos.
+El auxiliar guarda el mensaje restante, la clave restante y `acc`.
+
+| Paso | `resto` | `claveRestante` | `acc` | Acción |
+|---|---|---|---|---|
+| 1 | `"a a!a"` | `"bc"` | `""` | Cifra `a` como `b` |
+| 2 | `" a!a"` | `"c"` | `"b"` | Copia el espacio |
+| 3 | `"a!a"` | `"c"` | `"b "` | Cifra `a` como `c` |
+| 4 | `"!a"` | `""` | `"b c"` | Copia `!` |
+| 5 | `"a"` | `""` | `"b c!"` | Reinicia la clave |
+| 6 | `"a"` | `"bc"` | `"b c!"` | Cifra `a` como `b` |
+| 7 | `""` | `"c"` | `"b c!b"` | Devuelve `acc` |
+
+El espacio y el signo no consumen clave. Al reiniciarla, el mensaje
+queda igual y se procesa en la siguiente llamada.
+
+### Pila de Vigenère
+
+`vigenere` espera la respuesta de `aux`. Las llamadas del auxiliar
+son de cola y reutilizan el mismo marco:
+
+```mermaid
+flowchart TD
+    A["a a!a; clave bc; acc vacío"] --> B["espacio + a!a; clave c; acc b"]
+    B --> C["a!a; clave c; acc b + espacio"]
+    C --> D["!a; clave vacía; acc b c"]
+    D --> E["a; clave vacía; acc b c!"]
+    E --> F["a; clave bc; acc b c!"]
+    F --> G["vacío; clave c; acc b c!b"]
+```
+
+Cuando no queda mensaje, devuelve `"b c!b"`.
+Si la clave está vacía desde el inicio, se devuelve el mensaje original
+sin llamar al auxiliar.
