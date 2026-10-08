@@ -22,7 +22,7 @@ class CifradosClasicos {
   def esMinuscula(c: Char): Boolean = c >= 'a' && c <= 'z'
   def desplazar(letra: Char, k: Int): Char =
     if(esMinuscula(letra))
-      (primera + Math.floorMod(letra - primera + k, letras)).toChar
+      (primera + Math.floorMod(letra - primera + Math.floorMod(k, letras), letras)).toChar
     else letra
 
 
@@ -32,7 +32,7 @@ class CifradosClasicos {
 
   def cesar(m: Mensaje, k: Int): Mensaje =
     if(m.isEmpty()) ""
-    else desplazar(m.head,k) + cesar(m.tail,k)
+    else desplazar(m.head,k).toString + cesar(m.tail,k)
 
 
 
@@ -104,6 +104,7 @@ class CifradosClasicos {
    */
   def desplazamientoProbable(m: Mensaje): Int = {
     val lista = frecuencias(m)
+
 
     if (lista.isEmpty) 0
     else
