@@ -498,7 +498,6 @@ cesar("abc", 3) → "def"
 ```
 
 ---
-
 ## 2.4. Estado de la pila durante `cesar`
 
 En el primer nivel se tiene:
@@ -573,34 +572,31 @@ El siguiente diagrama muestra las funciones que intervienen durante el
 procesamiento:
 
 ```mermaid
-flowchart TD
-    A["cesar('abc', 3)"] --> B["m(0) = 'a'"]
-    B --> C["desplazar('a', 3)"]
-    C --> D["esMinuscula('a') → true"]
-    D --> E["Math.floorMod(3, 26) → 3"]
-    E --> F["desplazar devuelve 'd'"]
-    F --> G["cesar('bc', 3)"]
+sequenceDiagram
+    participant C1 as cesar("abc", 3)
+    participant D1 as desplazar('a', 3)
+    participant C2 as cesar("bc", 3)
+    participant D2 as desplazar('b', 3)
+    participant C3 as cesar("c", 3)
+    participant D3 as desplazar('c', 3)
+    participant C4 as cesar("", 3)
 
-    G --> H["m(0) = 'b'"]
-    H --> I["desplazar('b', 3)"]
-    I --> J["esMinuscula('b') → true"]
-    J --> K["Math.floorMod(4, 26) → 4"]
-    K --> L["desplazar devuelve 'e'"]
-    L --> M["cesar('c', 3)"]
+    C1->>D1: procesa 'a'
+    D1-->>C1: devuelve 'd'
+    C1->>C2: continúa con "bc"
 
-    M --> N["m(0) = 'c'"]
-    N --> O["desplazar('c', 3)"]
-    O --> P["esMinuscula('c') → true"]
-    P --> Q["Math.floorMod(5, 26) → 5"]
-    Q --> R["desplazar devuelve 'f'"]
-    R --> S["cesar('', 3)"]
+    C2->>D2: procesa 'b'
+    D2-->>C2: devuelve 'e'
+    C2->>C3: continúa con "c"
 
-    S --> T["m.isEmpty() → true"]
-    T --> U["devuelve ''"]
+    C3->>D3: procesa 'c'
+    D3-->>C3: devuelve 'f'
+    C3->>C4: continúa con ""
 
-    U --> V["'f' + '' → 'f'"]
-    V --> W["'e' + 'f' → 'ef'"]
-    W --> X["'d' + 'ef' → 'def'"]
+    C4-->>C3: devuelve ""
+    C3-->>C2: devuelve "f"
+    C2-->>C1: devuelve "ef"
+    C1-->>C1: devuelve "def"
 ```
 
 ---
@@ -932,36 +928,26 @@ El resultado parcial se encuentra en `acc` durante todo el proceso.
 ## 3.7. Diagrama de ejecución de `cesarCola`
 
 ```mermaid
-flowchart TD
-    A["cesarCola('abc', 3, '')"] --> B["m.isEmpty() → false"]
-    B --> C["m(0) = 'a'"]
-    C --> D["desplazar('a', 3)"]
-    D --> E["esMinuscula('a') → true"]
-    E --> F["Math.floorMod(3, 26) → 3"]
-    F --> G["'a' → 'd'"]
-    G --> H["'' + 'd' → 'd'"]
-    H --> I["cesarCola('bc', 3, 'd')"]
+sequenceDiagram
+    participant C1 as cesarCola("abc", 3, "")
+    participant D1 as desplazar('a', 3)
+    participant C2 as cesarCola("bc", 3, "d")
+    participant D2 as desplazar('b', 3)
+    participant C3 as cesarCola("c", 3, "de")
+    participant D3 as desplazar('c', 3)
+    participant C4 as cesarCola("", 3, "def")
 
-    I --> J["m.isEmpty() → false"]
-    J --> K["m(0) = 'b'"]
-    K --> L["desplazar('b', 3)"]
-    L --> M["esMinuscula('b') → true"]
-    M --> N["Math.floorMod(4, 26) → 4"]
-    N --> O["'b' → 'e'"]
-    O --> P["'d' + 'e' → 'de'"]
-    P --> Q["cesarCola('c', 3, 'de')"]
+    C1->>D1: procesa 'a'
+    D1-->>C1: devuelve 'd'
+    C1->>C2: continúa con acc = "d"
 
-    Q --> R["m.isEmpty() → false"]
-    R --> S["m(0) = 'c'"]
-    S --> T["desplazar('c', 3)"]
-    T --> U["esMinuscula('c') → true"]
-    U --> V["Math.floorMod(5, 26) → 5"]
-    V --> W["'c' → 'f'"]
-    W --> X["'de' + 'f' → 'def'"]
-    X --> Y["cesarCola('', 3, 'def')"]
+    C2->>D2: procesa 'b'
+    D2-->>C2: devuelve 'e'
+    C2->>C3: continúa con acc = "de"
 
-    Y --> Z["m.isEmpty() → true"]
-    Z --> AA["devuelve acc = 'def'"]
+    C3->>D3: procesa 'c'
+    D3-->>C3: devuelve 'f'
+    C3->>C4: continúa con acc = "def"
 ```
 
 ---
