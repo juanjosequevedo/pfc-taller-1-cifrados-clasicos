@@ -44,7 +44,6 @@ class CifradosClasicos {
    * Cuando la función esté escrita, anótela con
    * @tailrec: el compilador
    * comprueba que la llamada recursiva sea lo último que hace.
-   *
    */
     @tailrec
   final def cesarCola(m: Mensaje, k: Int, acc: Mensaje = ""): Mensaje =
@@ -69,12 +68,18 @@ class CifradosClasicos {
 
         if (letra >= 'a'  && letra <= 'z') {
 
-          val existe = acc.exists(x => x._1 == letra)
+          val existe = acc.exists(x => { val (caracter, cantidad) = x
+            caracter == letra})
 
           if (existe)
-            aux(RestoPalabra.tail, acc.map(x => if
-            (x._1 == letra) (x._1, x._2 + 1)
-            else x) )
+            aux(RestoPalabra.tail, acc.map(x => {
+              val (caracter, cantidad) = x
+
+              if (caracter == letra)
+                (caracter, cantidad+1)
+              else
+                (caracter, cantidad)
+            }))
           else
             aux(RestoPalabra.tail, (letra, 1) :: acc)
         }
@@ -84,7 +89,10 @@ class CifradosClasicos {
       }
     }
 
-    aux(m, List()).sortBy(x => (-x._2, x._1))
+    aux(m, List()).sortBy(x => {
+      val (caracter, cantidad) = x
+      (-cantidad, caracter)
+    })
   }
 
 
