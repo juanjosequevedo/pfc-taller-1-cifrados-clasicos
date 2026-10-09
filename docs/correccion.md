@@ -1,5 +1,3 @@
-Correción:
-
 # Informe de corrección — Taller 1: Cifrados clásicos
 
 Para justificar las funciones seguimos el ejemplo del profesor.
@@ -11,6 +9,10 @@ que se mantiene mientras avanza el proceso.
 
 Solo se cifran las minúsculas de `a` a `z`. Los demás caracteres
 se conservan.
+
+Como indicaba las especificaciones del taller, hicimos un nuevo archivo el 
+cual tuviera nuevos test diferentes a los otorgados, 5 por cada punto para ser mas especificos
+
 
 ## 1. Corrección de `cesar`
 

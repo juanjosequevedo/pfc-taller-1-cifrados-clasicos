@@ -1,4 +1,3 @@
-Proceso
 # Informe de proceso — Taller 1: Cifrados clásicos
 
 Fundamentos de Programación Funcional y Concurrente.
